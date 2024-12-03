@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../src/libraries/ChainlinkTWAP.sol";
+import "../../src/interfaces/AggregatorV3Interface.sol";
 
 // Mock Chainlink Oracle for testing
 contract MockChainlinkOracle is AggregatorV3Interface {
+    uint80 private _currentRoundId = 0;
+
     struct RoundData {
         uint80 roundId;
         int256 answer;
@@ -21,14 +23,14 @@ contract MockChainlinkOracle is AggregatorV3Interface {
     }
 
     function setRoundData(
-        uint80 roundId,
         int256 answer,
         uint256 startedAt,
         uint256 updatedAt,
         uint80 answeredInRound
     ) external {
-        rounds[roundId] = RoundData(
-            roundId,
+        _currentRoundId += 1;
+        rounds[_currentRoundId] = RoundData(
+            _currentRoundId,
             answer,
             startedAt,
             updatedAt,
@@ -46,6 +48,16 @@ contract MockChainlinkOracle is AggregatorV3Interface {
 
     function version() external pure override returns (uint256) {
         return 1;
+    }
+
+    function latestAnswer() external view override returns (int256) {
+        return rounds[_currentRoundId].answer;
+    }
+
+    function getAnswer(
+        uint80 _roundId
+    ) external view override returns (int256) {
+        return rounds[_roundId].answer;
     }
 
     function getRoundData(
@@ -84,14 +96,7 @@ contract MockChainlinkOracle is AggregatorV3Interface {
             uint80 answeredInRound
         )
     {
-        // Return the highest round
-        uint80 highestRound = 0;
-        for (uint80 i = 0; i < 1000; i++) {
-            if (rounds[i].roundId > 0) {
-                highestRound = i;
-            }
-        }
-        RoundData memory data = rounds[highestRound];
+        RoundData memory data = rounds[_currentRoundId];
         return (
             data.roundId,
             data.answer,

@@ -10,11 +10,7 @@ contract MockCoWAMMPool is IBPool, MockERC20 {
     mapping(address => uint256) private _weights;
     uint256 private _totalSupplyPool;
 
-    constructor(
-        address token0,
-        address token1,
-        uint8 decimals_
-    ) MockERC20(decimals_) {
+    constructor(address token0, address token1) MockERC20(18) {
         _tokens = new address[](2);
         _tokens[0] = token0;
         _tokens[1] = token1;

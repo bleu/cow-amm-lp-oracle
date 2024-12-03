@@ -31,4 +31,7 @@ interface AggregatorV3Interface {
             uint256 updatedAt,
             uint80 answeredInRound
         );
+
+    function latestAnswer() external view returns (int256);
+    function getAnswer(uint80 roundId) external view returns (int256);
 }

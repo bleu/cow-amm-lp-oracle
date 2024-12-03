@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {AggregatorV3Interface} from "../interfaces/AggregatorV3Interface.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-library ChainlinkTWAP {
+library ChainlinkUtils {
     using Math for uint256;
 
     /// @notice Calculates TWAP for a given oracle over specified number of rounds
@@ -13,7 +13,8 @@ library ChainlinkTWAP {
     /// @return twap Time-weighted average price with 8 decimals
     function getTWAP(
         address chainlinkOracle,
-        uint80 numRounds
+        uint80 numRounds,
+        uint8 decimals
     ) public view returns (uint256) {
         require(numRounds > 0, "Rounds must be > 0");
 
@@ -50,12 +51,30 @@ library ChainlinkTWAP {
         uint256 rawTWAP = Math.mulDiv(cumulativePrice, 1, timeWeight);
 
         // Convert to 8 decimals
-        if (oracleDecimals > 8) {
-            return rawTWAP / (10 ** (oracleDecimals - 8));
-        } else if (oracleDecimals < 8) {
-            return rawTWAP * (10 ** (8 - oracleDecimals));
+        if (oracleDecimals > decimals) {
+            return rawTWAP / (10 ** (oracleDecimals - decimals));
+        } else if (oracleDecimals < decimals) {
+            return rawTWAP * (10 ** (decimals - oracleDecimals));
         }
 
         return rawTWAP;
+    }
+
+    function getPriceWithDecimals(
+        address chainlinkOracle,
+        uint8 decimals
+    ) public view returns (uint256) {
+        AggregatorV3Interface oracle = AggregatorV3Interface(chainlinkOracle);
+        uint8 oracleDecimals = oracle.decimals();
+        int256 latestAnswer = oracle.latestAnswer();
+        require(latestAnswer > 0, "Invalid price data");
+        if (oracleDecimals == decimals) {
+            return uint256(latestAnswer);
+        }
+        if (oracleDecimals > decimals) {
+            return uint256(latestAnswer) / (10 ** (oracleDecimals - decimals));
+        }
+
+        return uint256(latestAnswer) * (10 ** (decimals - oracleDecimals));
     }
 }
