@@ -75,7 +75,6 @@ contract CoWAMMOracle is BNum {
 
         // Get token prices from Chainlink
         // use 18 decimals to math BMath
-        // TODO: use TWAP
         uint256 price0 = ChainlinkUtils.getPriceWithDecimals(token0Oracle, 18);
         uint256 price1 = ChainlinkUtils.getPriceWithDecimals(token1Oracle, 18);
 
